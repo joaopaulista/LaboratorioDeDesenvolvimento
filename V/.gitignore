@@ -1,0 +1,7 @@
+# Artefatos de build (gerados pelo Maven)
+target/
+*.class
+
+# Metadados do macOS extraídos do .zip
+_arquivos-mac/
+__MACOSX/
