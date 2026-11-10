@@ -32,7 +32,7 @@ O sistema gerencia **usuários**, suas **autorizações** (perfis de acesso), **
 
 | Pasta | Conteúdo |
 |-------|----------|
-| `01-springlab420252` | API Spring Boot 3.5 (Java, JPA, PostgreSQL) com `DDL.sql` e Dev Container |
+| `Projeto Spring Lab` | API Spring Boot 3.5 (Java, JPA, PostgreSQL) com `DDL.sql` e Dev Container |
 
 ## Tecnologias
 
