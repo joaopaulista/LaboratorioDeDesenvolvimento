@@ -1,0 +1,23 @@
+diff -ru 16-ciclo7-red/main/java/br/edu/checkout/ServicoCheckout.java 17-ciclo7-green/main/java/br/edu/checkout/ServicoCheckout.java
+--- 16-ciclo7-red/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:04:22.886575000 -0300
++++ 17-ciclo7-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:04:52.702296500 -0300
+@@ -30,8 +30,17 @@
+         Pagamento pagamento = cobrarOuLiberarReserva(solicitacao, total);
+         String numeroPedido = pedidoRepository.salvar(
+                 criarPedido(solicitacao, total, pagamento.transacaoId()));
+-        notificador.enviarConfirmacao(solicitacao.email(), numeroPedido, total);
+-        return new ResultadoCheckout(numeroPedido, total, true);
++        boolean notificacaoEnviada = notificar(solicitacao.email(), numeroPedido, total);
++        return new ResultadoCheckout(numeroPedido, total, notificacaoEnviada);
++    }
++
++    private boolean notificar(String email, String numeroPedido, BigDecimal total) {
++        try {
++            notificador.enviarConfirmacao(email, numeroPedido, total);
++            return true;
++        } catch (FalhaNotificacaoException falha) {
++            return false;
++        }
+     }
+ 
+     private Pagamento cobrarOuLiberarReserva(SolicitacaoCheckout solicitacao, BigDecimal total) {

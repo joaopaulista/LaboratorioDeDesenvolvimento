@@ -1,0 +1,26 @@
+diff -ru 10-ciclo4-green/test/java/br/edu/checkout/ServicoCheckoutTest.java 11-ciclo5-red/test/java/br/edu/checkout/ServicoCheckoutTest.java
+--- 10-ciclo4-green/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:01:25.100862700 -0300
++++ 11-ciclo5-red/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:01:52.502747200 -0300
+@@ -177,6 +177,22 @@
+         verifyNoInteractions(pagamentoGateway, pedidoRepository, notificador);
+     }
+ 
++    @Test
++    void deveLiberarReservaUmaVezQuandoPagamentoForRecusado() {
++        BigDecimal total = new BigDecimal("59.70");
++        when(estoqueGateway.reservar(SKU, 3)).thenReturn(true);
++        when(pagamentoGateway.cobrar(CLIENTE, total)).thenReturn(new Pagamento(false, null));
++
++        assertThrows(PagamentoRecusadoException.class,
++                () -> servico.finalizar(solicitacaoValida(3, "19.90")));
++
++        InOrder ordem = inOrder(estoqueGateway, pagamentoGateway);
++        ordem.verify(estoqueGateway, times(1)).reservar(SKU, 3);
++        ordem.verify(pagamentoGateway, times(1)).cobrar(CLIENTE, total);
++        ordem.verify(estoqueGateway, times(1)).liberar(SKU, 3);
++        verifyNoInteractions(pedidoRepository, notificador);
++    }
++
+     // ---------- Auxiliares ----------
+ 
+     private static SolicitacaoCheckout solicitacaoValida(int quantidade, String precoUnitario) {

@@ -1,0 +1,40 @@
+diff -ru 14-ciclo6-green/main/java/br/edu/checkout/ServicoCheckout.java 15-ciclo6-refactor/main/java/br/edu/checkout/ServicoCheckout.java
+--- 14-ciclo6-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:03:13.817177100 -0300
++++ 15-ciclo6-refactor/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:03:49.196637500 -0300
+@@ -27,21 +27,30 @@
+         if (!estoqueGateway.reservar(solicitacao.sku(), solicitacao.quantidade())) {
+             throw new EstoqueInsuficienteException();
+         }
++        Pagamento pagamento = cobrarOuLiberarReserva(solicitacao, total);
++        String numeroPedido = pedidoRepository.salvar(
++                criarPedido(solicitacao, total, pagamento.transacaoId()));
++        notificador.enviarConfirmacao(solicitacao.email(), numeroPedido, total);
++        return new ResultadoCheckout(numeroPedido, total, true);
++    }
++
++    private Pagamento cobrarOuLiberarReserva(SolicitacaoCheckout solicitacao, BigDecimal total) {
+         Pagamento pagamento;
+         try {
+             pagamento = pagamentoGateway.cobrar(solicitacao.clienteId(), total);
+         } catch (FalhaPagamentoException falha) {
+-            estoqueGateway.liberar(solicitacao.sku(), solicitacao.quantidade());
++            liberarReserva(solicitacao);
+             throw falha;
+         }
+         if (!pagamento.aprovado()) {
+-            estoqueGateway.liberar(solicitacao.sku(), solicitacao.quantidade());
++            liberarReserva(solicitacao);
+             throw new PagamentoRecusadoException();
+         }
+-        String numeroPedido = pedidoRepository.salvar(
+-                criarPedido(solicitacao, total, pagamento.transacaoId()));
+-        notificador.enviarConfirmacao(solicitacao.email(), numeroPedido, total);
+-        return new ResultadoCheckout(numeroPedido, total, true);
++        return pagamento;
++    }
++
++    private void liberarReserva(SolicitacaoCheckout solicitacao) {
++        estoqueGateway.liberar(solicitacao.sku(), solicitacao.quantidade());
+     }
+ 
+     private static BigDecimal calcularTotal(SolicitacaoCheckout solicitacao) {

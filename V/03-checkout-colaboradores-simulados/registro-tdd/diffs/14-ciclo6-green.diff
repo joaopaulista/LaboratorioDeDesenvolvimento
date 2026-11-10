@@ -1,0 +1,18 @@
+diff -ru 13-ciclo6-red/main/java/br/edu/checkout/ServicoCheckout.java 14-ciclo6-green/main/java/br/edu/checkout/ServicoCheckout.java
+--- 13-ciclo6-red/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:02:47.445673900 -0300
++++ 14-ciclo6-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:03:13.817177100 -0300
+@@ -27,7 +27,13 @@
+         if (!estoqueGateway.reservar(solicitacao.sku(), solicitacao.quantidade())) {
+             throw new EstoqueInsuficienteException();
+         }
+-        Pagamento pagamento = pagamentoGateway.cobrar(solicitacao.clienteId(), total);
++        Pagamento pagamento;
++        try {
++            pagamento = pagamentoGateway.cobrar(solicitacao.clienteId(), total);
++        } catch (FalhaPagamentoException falha) {
++            estoqueGateway.liberar(solicitacao.sku(), solicitacao.quantidade());
++            throw falha;
++        }
+         if (!pagamento.aprovado()) {
+             estoqueGateway.liberar(solicitacao.sku(), solicitacao.quantidade());
+             throw new PagamentoRecusadoException();

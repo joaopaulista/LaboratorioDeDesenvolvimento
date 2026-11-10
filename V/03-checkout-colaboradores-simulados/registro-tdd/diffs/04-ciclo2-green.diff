@@ -1,0 +1,24 @@
+diff -ru 03-ciclo2-red/main/java/br/edu/checkout/ServicoCheckout.java 04-ciclo2-green/main/java/br/edu/checkout/ServicoCheckout.java
+--- 03-ciclo2-red/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:57:16.943862400 -0300
++++ 04-ciclo2-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:57:42.358646500 -0300
+@@ -29,5 +29,20 @@
+         if (solicitacao == null) {
+             throw new IllegalArgumentException("Solicitação obrigatória");
+         }
++        if (solicitacao.clienteId() == null || solicitacao.clienteId().isBlank()) {
++            throw new IllegalArgumentException("clienteId obrigatório");
++        }
++        if (solicitacao.email() == null || solicitacao.email().isBlank()) {
++            throw new IllegalArgumentException("email obrigatório");
++        }
++        if (solicitacao.sku() == null || solicitacao.sku().isBlank()) {
++            throw new IllegalArgumentException("sku obrigatório");
++        }
++        if (solicitacao.quantidade() <= 0) {
++            throw new IllegalArgumentException("quantidade deve ser positiva");
++        }
++        if (solicitacao.precoUnitario() == null || solicitacao.precoUnitario().signum() <= 0) {
++            throw new IllegalArgumentException("preço unitário deve ser positivo");
++        }
+     }
+ }

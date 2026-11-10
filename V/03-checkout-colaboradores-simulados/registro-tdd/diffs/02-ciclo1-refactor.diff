@@ -1,0 +1,18 @@
+diff -ru 01-ciclo1-green/main/java/br/edu/checkout/ServicoCheckout.java 02-ciclo1-refactor/main/java/br/edu/checkout/ServicoCheckout.java
+--- 01-ciclo1-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:56:13.336463200 -0300
++++ 02-ciclo1-refactor/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:56:42.387148500 -0300
+@@ -21,9 +21,13 @@
+     }
+ 
+     public ResultadoCheckout finalizar(SolicitacaoCheckout solicitacao) {
++        validar(solicitacao);
++        throw new UnsupportedOperationException("Implemente por TDD");
++    }
++
++    private static void validar(SolicitacaoCheckout solicitacao) {
+         if (solicitacao == null) {
+             throw new IllegalArgumentException("Solicitação obrigatória");
+         }
+-        throw new UnsupportedOperationException("Implemente por TDD");
+     }
+ }

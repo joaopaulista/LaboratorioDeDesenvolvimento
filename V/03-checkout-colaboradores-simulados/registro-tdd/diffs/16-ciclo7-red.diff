@@ -1,0 +1,44 @@
+diff -ru 15-ciclo6-refactor/test/java/br/edu/checkout/ServicoCheckoutTest.java 16-ciclo7-red/test/java/br/edu/checkout/ServicoCheckoutTest.java
+--- 15-ciclo6-refactor/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:03:49.196637500 -0300
++++ 16-ciclo7-red/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:04:22.885949500 -0300
+@@ -1,12 +1,14 @@
+ package br.edu.checkout;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
+ import static org.junit.jupiter.api.Assertions.assertSame;
+ import static org.junit.jupiter.api.Assertions.assertThrows;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyInt;
+ import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.Mockito.doThrow;
+ import static org.mockito.Mockito.inOrder;
+ import static org.mockito.Mockito.never;
+ import static org.mockito.Mockito.times;
+@@ -212,6 +214,25 @@
+         verifyNoInteractions(pedidoRepository, notificador);
+     }
+ 
++    @Test
++    void naoDeveDesfazerCompraQuandoNotificacaoFalhar() {
++        BigDecimal total = new BigDecimal("59.70");
++        when(estoqueGateway.reservar(SKU, 3)).thenReturn(true);
++        when(pagamentoGateway.cobrar(CLIENTE, total)).thenReturn(new Pagamento(true, "TX-7"));
++        when(pedidoRepository.salvar(any(PedidoConfirmado.class))).thenReturn("PED-7");
++        doThrow(new FalhaNotificacaoException("SMTP fora do ar"))
++                .when(notificador).enviarConfirmacao(EMAIL, "PED-7", total);
++
++        ResultadoCheckout resultado = servico.finalizar(solicitacaoValida(3, "19.90"));
++
++        assertEquals("PED-7", resultado.numeroPedido());
++        assertEquals(total, resultado.total());
++        assertFalse(resultado.notificacaoEnviada());
++        verify(pagamentoGateway, times(1)).cobrar(CLIENTE, total);
++        verify(pedidoRepository, times(1)).salvar(any(PedidoConfirmado.class));
++        verify(estoqueGateway, never()).liberar(anyString(), anyInt());
++    }
++
+     // ---------- Auxiliares ----------
+ 
+     private static SolicitacaoCheckout solicitacaoValida(int quantidade, String precoUnitario) {

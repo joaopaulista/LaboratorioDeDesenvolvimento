@@ -1,0 +1,38 @@
+diff -ru 07-ciclo3-green/main/java/br/edu/checkout/ServicoCheckout.java 08-ciclo3-refactor/main/java/br/edu/checkout/ServicoCheckout.java
+--- 07-ciclo3-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:59:53.231163900 -0300
++++ 08-ciclo3-refactor/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:00:22.713334600 -0300
+@@ -23,19 +23,28 @@
+ 
+     public ResultadoCheckout finalizar(SolicitacaoCheckout solicitacao) {
+         validar(solicitacao);
+-        BigDecimal total = solicitacao.precoUnitario()
+-                .multiply(BigDecimal.valueOf(solicitacao.quantidade()));
++        BigDecimal total = calcularTotal(solicitacao);
+         estoqueGateway.reservar(solicitacao.sku(), solicitacao.quantidade());
+         Pagamento pagamento = pagamentoGateway.cobrar(solicitacao.clienteId(), total);
+-        String numeroPedido = pedidoRepository.salvar(new PedidoConfirmado(
++        String numeroPedido = pedidoRepository.salvar(
++                criarPedido(solicitacao, total, pagamento.transacaoId()));
++        notificador.enviarConfirmacao(solicitacao.email(), numeroPedido, total);
++        return new ResultadoCheckout(numeroPedido, total, true);
++    }
++
++    private static BigDecimal calcularTotal(SolicitacaoCheckout solicitacao) {
++        return solicitacao.precoUnitario().multiply(BigDecimal.valueOf(solicitacao.quantidade()));
++    }
++
++    private static PedidoConfirmado criarPedido(
++            SolicitacaoCheckout solicitacao, BigDecimal total, String transacaoId) {
++        return new PedidoConfirmado(
+                 solicitacao.clienteId(),
+                 solicitacao.email(),
+                 solicitacao.sku(),
+                 solicitacao.quantidade(),
+                 total,
+-                pagamento.transacaoId()));
+-        notificador.enviarConfirmacao(solicitacao.email(), numeroPedido, total);
+-        return new ResultadoCheckout(numeroPedido, total, true);
++                transacaoId);
+     }
+ 
+     private static void validar(SolicitacaoCheckout solicitacao) {

@@ -1,0 +1,14 @@
+diff -ru 00-inicial/main/java/br/edu/checkout/ServicoCheckout.java 01-ciclo1-green/main/java/br/edu/checkout/ServicoCheckout.java
+--- 00-inicial/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:55:48.844051600 -0300
++++ 01-ciclo1-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:56:13.336463200 -0300
+@@ -21,7 +21,9 @@
+     }
+ 
+     public ResultadoCheckout finalizar(SolicitacaoCheckout solicitacao) {
+-        // Desenvolva este método em ciclos Red–Green–Refactor.
++        if (solicitacao == null) {
++            throw new IllegalArgumentException("Solicitação obrigatória");
++        }
+         throw new UnsupportedOperationException("Implemente por TDD");
+     }
+ }

@@ -1,0 +1,14 @@
+diff -ru 11-ciclo5-red/main/java/br/edu/checkout/ServicoCheckout.java 12-ciclo5-green/main/java/br/edu/checkout/ServicoCheckout.java
+--- 11-ciclo5-red/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:01:52.554865100 -0300
++++ 12-ciclo5-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:02:18.663503400 -0300
+@@ -28,6 +28,10 @@
+             throw new EstoqueInsuficienteException();
+         }
+         Pagamento pagamento = pagamentoGateway.cobrar(solicitacao.clienteId(), total);
++        if (!pagamento.aprovado()) {
++            estoqueGateway.liberar(solicitacao.sku(), solicitacao.quantidade());
++            throw new PagamentoRecusadoException();
++        }
+         String numeroPedido = pedidoRepository.salvar(
+                 criarPedido(solicitacao, total, pagamento.transacaoId()));
+         notificador.enviarConfirmacao(solicitacao.email(), numeroPedido, total);

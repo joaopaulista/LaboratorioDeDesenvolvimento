@@ -1,0 +1,11 @@
+diff -ru 18-ciclo7-refactor/test/java/br/edu/checkout/ServicoCheckoutTest.java 19-melhoria-desafio/test/java/br/edu/checkout/ServicoCheckoutTest.java
+--- 18-ciclo7-refactor/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:05:25.319335200 -0300
++++ 19-melhoria-desafio/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:07:30.016242300 -0300
+@@ -116,6 +116,7 @@
+         ordem.verify(pagamentoGateway, times(1)).cobrar(CLIENTE, total);
+         ordem.verify(pedidoRepository, times(1)).salvar(pedidoEsperado);
+         ordem.verify(notificador, times(1)).enviarConfirmacao(EMAIL, "PED-42", total);
++        verify(notificador, times(1)).enviarConfirmacao(anyString(), anyString(), any(BigDecimal.class));
+         verify(estoqueGateway, never()).liberar(anyString(), anyInt());
+     }
+ 

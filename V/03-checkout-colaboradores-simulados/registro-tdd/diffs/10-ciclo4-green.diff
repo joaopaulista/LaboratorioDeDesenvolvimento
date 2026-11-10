@@ -1,0 +1,14 @@
+diff -ru 09-ciclo4-red/main/java/br/edu/checkout/ServicoCheckout.java 10-ciclo4-green/main/java/br/edu/checkout/ServicoCheckout.java
+--- 09-ciclo4-red/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:00:59.359833600 -0300
++++ 10-ciclo4-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 21:01:25.121036500 -0300
+@@ -24,7 +24,9 @@
+     public ResultadoCheckout finalizar(SolicitacaoCheckout solicitacao) {
+         validar(solicitacao);
+         BigDecimal total = calcularTotal(solicitacao);
+-        estoqueGateway.reservar(solicitacao.sku(), solicitacao.quantidade());
++        if (!estoqueGateway.reservar(solicitacao.sku(), solicitacao.quantidade())) {
++            throw new EstoqueInsuficienteException();
++        }
+         Pagamento pagamento = pagamentoGateway.cobrar(solicitacao.clienteId(), total);
+         String numeroPedido = pedidoRepository.salvar(
+                 criarPedido(solicitacao, total, pagamento.transacaoId()));

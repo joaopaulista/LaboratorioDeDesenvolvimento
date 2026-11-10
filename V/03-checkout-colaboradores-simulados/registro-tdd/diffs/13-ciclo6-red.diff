@@ -1,0 +1,36 @@
+diff -ru 12-ciclo5-green/test/java/br/edu/checkout/ServicoCheckoutTest.java 13-ciclo6-red/test/java/br/edu/checkout/ServicoCheckoutTest.java
+--- 12-ciclo5-green/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:02:18.642040900 -0300
++++ 13-ciclo6-red/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:02:47.415965800 -0300
+@@ -1,6 +1,7 @@
+ package br.edu.checkout;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertSame;
+ import static org.junit.jupiter.api.Assertions.assertThrows;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+ import static org.mockito.ArgumentMatchers.any;
+@@ -189,6 +190,24 @@
+         InOrder ordem = inOrder(estoqueGateway, pagamentoGateway);
+         ordem.verify(estoqueGateway, times(1)).reservar(SKU, 3);
+         ordem.verify(pagamentoGateway, times(1)).cobrar(CLIENTE, total);
++        ordem.verify(estoqueGateway, times(1)).liberar(SKU, 3);
++        verifyNoInteractions(pedidoRepository, notificador);
++    }
++
++    @Test
++    void deveLiberarReservaEPropagarMesmaExcecaoNaFalhaTecnicaDoPagamento() {
++        BigDecimal total = new BigDecimal("59.70");
++        FalhaPagamentoException falha = new FalhaPagamentoException("gateway indisponível");
++        when(estoqueGateway.reservar(SKU, 3)).thenReturn(true);
++        when(pagamentoGateway.cobrar(CLIENTE, total)).thenThrow(falha);
++
++        FalhaPagamentoException lancada = assertThrows(FalhaPagamentoException.class,
++                () -> servico.finalizar(solicitacaoValida(3, "19.90")));
++
++        assertSame(falha, lancada);
++        InOrder ordem = inOrder(estoqueGateway, pagamentoGateway);
++        ordem.verify(estoqueGateway, times(1)).reservar(SKU, 3);
++        ordem.verify(pagamentoGateway, times(1)).cobrar(CLIENTE, total);
+         ordem.verify(estoqueGateway, times(1)).liberar(SKU, 3);
+         verifyNoInteractions(pedidoRepository, notificador);
+     }

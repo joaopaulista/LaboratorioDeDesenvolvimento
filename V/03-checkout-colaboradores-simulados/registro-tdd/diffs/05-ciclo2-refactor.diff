@@ -1,0 +1,33 @@
+diff -ru 04-ciclo2-green/main/java/br/edu/checkout/ServicoCheckout.java 05-ciclo2-refactor/main/java/br/edu/checkout/ServicoCheckout.java
+--- 04-ciclo2-green/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:57:42.358646500 -0300
++++ 05-ciclo2-refactor/main/java/br/edu/checkout/ServicoCheckout.java	2026-11-09 20:58:11.568771000 -0300
+@@ -29,15 +29,9 @@
+         if (solicitacao == null) {
+             throw new IllegalArgumentException("Solicitação obrigatória");
+         }
+-        if (solicitacao.clienteId() == null || solicitacao.clienteId().isBlank()) {
+-            throw new IllegalArgumentException("clienteId obrigatório");
+-        }
+-        if (solicitacao.email() == null || solicitacao.email().isBlank()) {
+-            throw new IllegalArgumentException("email obrigatório");
+-        }
+-        if (solicitacao.sku() == null || solicitacao.sku().isBlank()) {
+-            throw new IllegalArgumentException("sku obrigatório");
+-        }
++        exigirTexto(solicitacao.clienteId(), "clienteId");
++        exigirTexto(solicitacao.email(), "email");
++        exigirTexto(solicitacao.sku(), "sku");
+         if (solicitacao.quantidade() <= 0) {
+             throw new IllegalArgumentException("quantidade deve ser positiva");
+         }
+@@ -45,4 +39,10 @@
+             throw new IllegalArgumentException("preço unitário deve ser positivo");
+         }
+     }
++
++    private static void exigirTexto(String valor, String campo) {
++        if (valor == null || valor.isBlank()) {
++            throw new IllegalArgumentException(campo + " obrigatório");
++        }
++    }
+ }

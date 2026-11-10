@@ -1,0 +1,87 @@
+diff -ru 08-ciclo3-refactor/test/java/br/edu/checkout/ServicoCheckoutTest.java 09-ciclo4-red/test/java/br/edu/checkout/ServicoCheckoutTest.java
+--- 08-ciclo3-refactor/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:00:22.662274800 -0300
++++ 09-ciclo4-red/test/java/br/edu/checkout/ServicoCheckoutTest.java	2026-11-09 21:00:59.306764400 -0300
+@@ -3,6 +3,7 @@
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertThrows;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyInt;
+ import static org.mockito.ArgumentMatchers.anyString;
+ import static org.mockito.Mockito.inOrder;
+@@ -21,6 +22,7 @@
+ import org.junit.jupiter.params.ParameterizedTest;
+ import org.junit.jupiter.params.provider.Arguments;
+ import org.junit.jupiter.params.provider.MethodSource;
++import org.mockito.ArgumentCaptor;
+ import org.mockito.InOrder;
+ import org.mockito.Mock;
+ import org.mockito.junit.jupiter.MockitoExtension;
+@@ -114,6 +116,67 @@
+         verify(estoqueGateway, never()).liberar(anyString(), anyInt());
+     }
+ 
++    @Test
++    void deveSalvarPedidoComTodosOsDadosRecebidosETransacaoDoPagamento() {
++        BigDecimal total = new BigDecimal("59.70");
++        when(estoqueGateway.reservar(SKU, 3)).thenReturn(true);
++        when(pagamentoGateway.cobrar(CLIENTE, total)).thenReturn(new Pagamento(true, "TX-99"));
++        when(pedidoRepository.salvar(any(PedidoConfirmado.class))).thenReturn("PED-1");
++
++        servico.finalizar(solicitacaoValida(3, "19.90"));
++
++        ArgumentCaptor<PedidoConfirmado> captor = ArgumentCaptor.forClass(PedidoConfirmado.class);
++        verify(pedidoRepository, times(1)).salvar(captor.capture());
++        PedidoConfirmado salvo = captor.getValue();
++        assertEquals(CLIENTE, salvo.clienteId());
++        assertEquals(EMAIL, salvo.email());
++        assertEquals(SKU, salvo.sku());
++        assertEquals(3, salvo.quantidade());
++        assertEquals(total, salvo.total());
++        assertEquals("TX-99", salvo.transacaoId());
++    }
++
++    @Test
++    void deveAceitarQuantidadeMinimaMantendoOPrecoComoTotal() {
++        BigDecimal preco = new BigDecimal("42.50");
++        when(estoqueGateway.reservar(SKU, 1)).thenReturn(true);
++        when(pagamentoGateway.cobrar(CLIENTE, preco)).thenReturn(new Pagamento(true, "TX-2"));
++        when(pedidoRepository.salvar(any(PedidoConfirmado.class))).thenReturn("PED-2");
++
++        ResultadoCheckout resultado = servico.finalizar(solicitacaoValida(1, "42.50"));
++
++        assertEquals(preco, resultado.total());
++        verify(pagamentoGateway, times(1)).cobrar(CLIENTE, preco);
++    }
++
++    @Test
++    void deveCalcularTotalComPrecisaoSemArredondar() {
++        BigDecimal total = new BigDecimal("0.015");
++        when(estoqueGateway.reservar(SKU, 3)).thenReturn(true);
++        when(pagamentoGateway.cobrar(CLIENTE, total)).thenReturn(new Pagamento(true, "TX-3"));
++        when(pedidoRepository.salvar(any(PedidoConfirmado.class))).thenReturn("PED-3");
++
++        ResultadoCheckout resultado = servico.finalizar(solicitacaoValida(3, "0.005"));
++
++        assertEquals(total, resultado.total());
++        verify(pagamentoGateway, times(1)).cobrar(CLIENTE, total);
++        verify(notificador, times(1)).enviarConfirmacao(EMAIL, "PED-3", total);
++    }
++
++    // ---------- Falhas ----------
++
++    @Test
++    void deveRecusarSemEstoqueSemCobrarRegistrarNotificarOuLiberar() {
++        when(estoqueGateway.reservar(SKU, 3)).thenReturn(false);
++
++        assertThrows(EstoqueInsuficienteException.class,
++                () -> servico.finalizar(solicitacaoValida(3, "19.90")));
++
++        verify(estoqueGateway, times(1)).reservar(SKU, 3);
++        verify(estoqueGateway, never()).liberar(anyString(), anyInt());
++        verifyNoInteractions(pagamentoGateway, pedidoRepository, notificador);
++    }
++
+     // ---------- Auxiliares ----------
+ 
+     private static SolicitacaoCheckout solicitacaoValida(int quantidade, String precoUnitario) {
